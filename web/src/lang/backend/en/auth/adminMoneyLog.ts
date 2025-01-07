@@ -1,0 +1,15 @@
+export default {
+    id: 'Id',
+    admin_id: 'admin_id',
+    admin__username: 'Username',
+    money: 'Money',
+    comment: 'Comment',
+    create_time: 'Create_time',
+    update_time: 'Update_time',
+    'quick Search Fields': 'Id',
+    recharge_channel_id:'Recharge channel',
+    raw_money:'Raw money',
+    recharge_channel_name:'Recharge channel name',
+    rate:'Rate',
+    credit_money:'Credit money',
+}
