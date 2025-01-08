@@ -44,10 +44,10 @@
                                         v-if="scope.row.card_status != 'cancelled'"
                                     >
                                         <template #reference>
-                                        <div class="el-dropdown-menu__item" @click="setCurrentRow(scope.row)">
-                                            <Icon name="el-icon-DocumentDelete" class="menu_icon" />
-                                            <span>{{ t('card.cards.Cancel_a_card') }}</span>
-                                        </div>
+                                            <div class="el-dropdown-menu__item" @click="setCurrentRow(scope.row)">
+                                                <Icon name="el-icon-DocumentDelete" class="menu_icon" />
+                                                <span>{{ t('card.cards.Cancel_a_card') }}</span>
+                                            </div>
                                         </template>
                                     </el-popconfirm>
                                 </el-dropdown-menu>
