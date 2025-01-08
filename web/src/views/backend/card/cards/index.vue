@@ -361,7 +361,7 @@ const baTable = new baTableClass(
     {
         column: [
             { type: 'selection', align: 'center', operator: false },
-            { label: t('card.cards.cardInfo__nickname'), prop: 'nickname', align: 'center', operator: 'LIKE',render: 'customTemplate',
+            { label: t('card.cards.cardInfo__nickname'), prop: 'nickname', align: 'center', operator: 'LIKE',render: 'customTemplate', operatorPlaceholder: t('Fuzzy query'),
                 customTemplate: (row: TableRow, field: TableColumn, value: any, column, index: number) => {
                     if(!value){
                         return '...';
@@ -371,7 +371,7 @@ const baTable = new baTableClass(
                 }
             },
             { label: t('card.cards.card_scheme'), prop: 'card_scheme', align: 'center', operator: false,slotName: 'card_scheme', render: 'slot' },
-            { label: t('card.cards.mask_card_no'), prop: 'mask_card_no', align: 'center', operator: 'LIKE' },
+            { label: t('card.cards.mask_card_no'), prop: 'mask_card_no', align: 'center', operator: 'LIKE', operatorPlaceholder: t('Fuzzy query') },
             { label: t('card.cards.card_status'), prop: 'card_status', align: 'center', operator: false ,render: 'customTemplate',
                 customTemplate: (row: TableRow, field: TableColumn, value: any, column, index: number) => {
                     if(value == 'normal'){
