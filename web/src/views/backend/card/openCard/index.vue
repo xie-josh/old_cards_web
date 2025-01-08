@@ -16,7 +16,6 @@
                 class="center-form"
                 label-position="top"
                 >
-                <!-- <div class="title">{{cardholderUser}}</div> -->
                 <el-form-item label="币种">
                     <div class="bin-container">
                         <el-button class="bin-button" disabled>
@@ -48,29 +47,31 @@
                         resize="none"
                     />
                 </el-form-item>
-                <div style="display: flex;">
+                <div>
                     <el-form-item :label="number" required class="custom-label-position" prop="quantity">
                         <!-- <el-input-number v-model="openCard.quantity" :min="0" class="el-input" integer></el-input-number> -->
                         <el-input-number v-model="openCard.quantity" :min="0" class="el-input" integer controls-position="right">
                             <template #decrease-icon>
-                            <el-icon>
-                                <Minus />
-                            </el-icon>
+                              <el-icon><Minus /></el-icon>
                             </template>
                             <template #increase-icon>
-                            <el-icon>
-                                <Plus />
-                            </el-icon>
+                              <el-icon><Plus /></el-icon>
                             </template>
                         </el-input-number>
                     </el-form-item>
-                    <el-form-item :label="amount" required class="custom-label-position" style="margin-left: 15px;" prop="amount">
+                    <el-form-item label="是否限额" required class="custom-label-position" prop="amount">
+                        <!-- <el-input v-model="openCard.amount" class="el-input" type="number" :min="1"></el-input> -->
+                        <el-select v-model="openCard.quota" placeholder="Select" class="el-input">
+                            <el-option v-for="item in quotaList" :key="item.value" :label="item.label" :value="item.value"/>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item :label="amount" v-if="openCard.quota === 'unlimited'" required class="custom-label-position" prop="amount">
                         <el-input v-model="openCard.amount" class="el-input" type="number" :min="1"></el-input>
                     </el-form-item>
                 </div>
                 <div class="form-actions">
                     <el-form-item>
-                        <el-button type="primary" :loading="loading" @click="batchConfirmFn(ruleFormRef)">{{submit}}</el-button>
+                        <el-button type="primary" :loading="loading" @click="batchConfirmFn(ruleFormRef)">{{ submit }}</el-button>
                     </el-form-item>
                 </div>
             </el-form>
@@ -80,19 +81,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, provide, reactive, watch, computed } from 'vue'
-import baTableClass from '/@/utils/baTable'
-import PopupForm from './popupForm.vue'
-import Table from '/@/components/table/index.vue'
-import TableHeader from '/@/components/table/header/index.vue'
-import { defaultOptButtons } from '/@/components/table'
-import { baTableApi } from '/@/api/common'
+import { ref, reactive, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getCardBinApi,openCardApi} from '/@/api/backend/index.ts';
 import { tips } from '/@/utils/common';
 import { ElMessage, FormInstance, FormRules } from 'element-plus'
 import headerContent from '/@/components/headerContent/index.vue'
-import { Minus, Plus } from '@element-plus/icons-vue'
 defineOptions({
     name: 'user/user',
 })
@@ -112,16 +106,22 @@ const binOptions = ref(
 )
 const loading = ref(false)
 interface openCard {
-  'quantity':number
-  'amount':number
-  'cardBin':string
+  'quantity': number
+  'amount': number
+  'cardBin': string
+  quota: string
 }
 
 const openCard:openCard = reactive({
-    'quantity':0,
-    'amount':1,
-    'cardBin':''
+    'quantity': 0,
+    'amount': 1,
+    'cardBin': '',
+    quota: 'unlimited'
 })
+const quotaList = [
+    {label: '不限', value: 'unlimited'},
+    {label: '限额', value: 'limited'}
+]
 const validateCardBin = (rule: any, value: string, callback: any) => {
     if (value === '') {
         callback(new Error(t('card.openCard.Please_select_card_bin')))
@@ -168,7 +168,7 @@ const batchConfirmFn = async (formEl: FormInstance | undefined) => {
                     'number': openCard.quantity,
                 }
                 console.log('postData', postData)
-                let res: anyObj = await openCardApi(postData)
+                await openCardApi(postData)
                 tips(t('card.openCard.open_card_tips'), 'success')
                 resetForm(formEl)
             } catch (error) {
@@ -186,28 +186,6 @@ const batchConfirmFn = async (formEl: FormInstance | undefined) => {
         }
     })
 }
-// const batchConfirmFn = async(type:number) =>{
-//   if (openCard.quantity <= 0) {
-//       ElMessage({
-//           message: '开卡数量必须大于0',
-//           type: 'warning',
-//       })
-//       return
-//   }
-//   loading.value = true
-//   let postData = {
-//       'card_bin':openCard.cardBin,
-//       'arrival_amount':openCard.amount,
-//       'number':openCard.quantity,
-//   }
-//   let res: anyObj = await openCardApi(postData)
-//   tips('开卡中，请稍后刷新列表', 'success')
-//   setTimeout(() => {
-//       loading.value = false
-//       openCard.quantity = 0
-//       openCard.cardBin = ''
-//   }, 3000)
-// }
 
 const getSelectBin = async() => {
     let postData = {}
@@ -291,7 +269,7 @@ const selectBin = (bin: string) => {
    padding: 5px 0;
 }
 .el-input {
-   width: 120px
+   width: 150px
 }
 .bin-container {
     display: flex;
