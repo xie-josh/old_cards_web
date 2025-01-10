@@ -29,19 +29,23 @@
             <template #operate>
                 <el-table-column :label="t('card.cards.operate')" width="220" align="center">
                     <template #default="scope">
-                        <el-dropdown placement="bottom-end" class="operate" v-if="scope.row.card_status !== 'cancelled' && scope.row.card_status != 'canceling'">
+                        <el-dropdown placement="bottom-end" class="operate" v-if="scope.row.cardInfo.card_status !== 'cancelled' && scope.row.cardInfo.card_status != 'canceling'">
                             <el-button style="border: 0px; background-color: transparent;"> <Icon name="el-icon-MoreFilled" style="font-size: 14px;" color="#adadad" /></el-button>
                             <template #dropdown>
                                 <el-dropdown-menu>
-                                    <el-dropdown-item @click="openQuotaDialog"><Icon name="el-icon-Lock" class="menu_icon"/>限额</el-dropdown-item>
-                                    <el-dropdown-item v-if="scope.row.card_status == 'normal'" @click="disposeFn(4,scope.row)"><Icon name="el-icon-Lock" class="menu_icon" />{{t('card.cards.Frozen')}}</el-dropdown-item>
+                                    <el-dropdown-item v-if="scope.row.cardInfo.card_status == 'normal' || scope.row.cardInfo.card_status == 'cancelled'" @click="openQuotaDialog(scope.row)"><Icon name="el-icon-PieChart" class="menu_icon"/>限额</el-dropdown-item>
+                                    <!-- 冻结 -->
+                                    <el-dropdown-item v-if="scope.row.cardInfo.card_status == 'normal'" @click="disposeFn(4,scope.row)"><Icon name="el-icon-Lock" class="menu_icon" />{{t('card.cards.Frozen')}}</el-dropdown-item>
+                                    <!-- 解冻 -->
+                                    <el-dropdown-item v-if="scope.row.cardInfo.card_status == 'frozen'" @click="disposeFn(5,scope.row)"><Icon name="el-icon-Unlock" class="menu_icon" />{{t('card.cards.thaw')}}</el-dropdown-item>
+                                    <!-- 销卡 -->
                                     <el-popconfirm
                                         width="220"
                                         icon-color="#626AEF"
                                         :title="t('card.cards.Cancel_a_card_tips')"
                                         @confirm="() => handleConfirm(6)"
                                         @cancel="handleCancel"
-                                        v-if="scope.row.card_status != 'cancelled'"
+                                        v-if="scope.row.cardInfo.card_status != 'cancelled' && scope.row.cardInfo.card_status != 'frozen'"
                                     >
                                         <template #reference>
                                             <div class="el-dropdown-menu__item" @click="setCurrentRow(scope.row)">
@@ -53,8 +57,10 @@
                                 </el-dropdown-menu>
                             </template>
                         </el-dropdown>
-                        <el-button v-if="scope.row.card_status !== 'cancelled' && scope.row.card_status !== 'canceling'"  type='primary' text='primary' @click="disposeFn(1,scope.row)">{{t('card.cards.details')}}</el-button>
-                        <el-button v-if="scope.row.card_status !== 'cancelled' && scope.row.card_status !== 'canceling'"  type='primary' text='primary' @click="disposeFn(2,scope.row)">{{ t('card.cards.note')}}</el-button>
+                        <!-- <span v-else style="font-size: 18px;font-weight: bolder; color: #B7B7B7;padding: 0 15px;">...</span> -->
+                        <el-button v-if="scope.row.cardInfo.card_status !== 'cancelled' && scope.row.cardInfo.card_status !== 'canceling'"  type='primary' text='primary' @click="disposeFn(1,scope.row)">{{t('card.cards.details')}}</el-button>
+                        <!-- 修改昵称 -->
+                        <el-button v-if="scope.row.cardInfo.card_status !== 'cancelled' && scope.row.cardInfo.card_status !== 'canceling'"  type='primary' text='primary' @click="disposeFn(2,scope.row)">{{ t('card.cards.note')}}</el-button>
                     </template>
                 </el-table-column>
             </template>
@@ -146,7 +152,7 @@
                 <div class="dialog-body limitType">
                     <el-form :model="card.quota" label-width="160px" label-position="top">
                         <el-form-item :label="t('card.cards.single_stroke_Maximum_amount')" class="custom-form-item">
-                            <el-input v-model="card.quota.singleLimit" :placeholder="t('card.cards.Maximum_amount') + ': 00,000'">
+                            <el-input v-model="card.quota.maxOnPercent" :placeholder="t('card.cards.Maximum_amount') + ': 00,000'">
                                 <template #append style="background-color: #dfdeea;" >USD</template>
                             </el-input>
                         </el-form-item>
@@ -164,22 +170,22 @@
                         <el-form-item class="custom-form-item" style="margin-bottom: 0;">
                             <div class="form-item-content">
                                 <span class="left-text">{{ t('card.cards.Trading_quota') }}</span>
-                                <span style="padding: 0 5px;" v-if="card.quota.limitType != 'unlimited'" class="right-text">{{ t('card.cards.Remaining_amount') }}: {{card.quota.transactionLimit}}</span>
-                                <span v-if="card.quota.limitType != 'unlimited'" class="right-text">{{ t('card.cards.total_quota') }}: {{card.quota.totalTransactionLimit}}</span>
+                                <span style="padding: 0 5px;" v-if="card.quota.transactionLimitType != 'unlimited'" class="right-text">{{ t('card.cards.Remaining_amount') }}: {{card.quota.availableTransactionLimit}}</span>
+                                <span v-if="card.quota.transactionLimitType != 'unlimited'" class="right-text">{{ t('card.cards.total_quota') }}: {{card.quota.totalTransactionLimit}}</span>
                             </div>
                         </el-form-item>
                         <el-form-item  class="custom-form-item">
                             <div style="display: flex; align-items: center;width:460px;">
-                                <el-select v-model="card.quota.limitType" v-value="card.quota.limitType" :placeholder="t('card.cards.Please_select')" class="custom-select1" style="width: 150px;">
+                                <el-select v-model="card.quota.transactionLimitType" v-value="card.quota.transactionLimitType" :placeholder="t('card.cards.Please_select')" class="custom-select1" style="width: 150px;">
                                     <el-option :label="t('card.cards.restrict')" value="limited"></el-option>
                                     <el-option :label="t('card.cards.not_restrict')" value="unlimited"></el-option>
                                     <el-option :label="t('card.cards.cover')" value="cover"></el-option>
                                 </el-select>
-                                <el-select v-if="card.quota.limitType != 'unlimited'" v-model="card.quota.operationType" :placeholder="t('card.cards.Please_select')" class="custom-select" style="margin-left: 25px;width: 80px;">
+                                <el-select v-if="card.quota.transactionLimitType != 'unlimited'" v-model="card.quota.transaction_limit_change_type" :placeholder="t('card.cards.Please_select')" class="custom-select" style="margin-left: 25px;width: 80px;">
                                     <el-option :label="t('card.cards.augment')" value="increase"></el-option>
                                     <el-option :label="t('card.cards.restrict')" value="decrease"></el-option>
                                 </el-select>
-                                <el-input v-if="card.quota.limitType != 'unlimited'" v-model="card.quota.amount" placeholder="0" class="custom-select2" style="width: 230px;" />
+                                <el-input v-if="card.quota.transactionLimitType != 'unlimited'" v-model="card.quota.transaction_limit" placeholder="0" class="custom-select2" style="width: 230px;" />
                             </div>
                         </el-form-item>
                     </el-form>
@@ -241,7 +247,7 @@
             <div class="dialog-body limitType">
                 <el-form :model="card.quota" label-width="160px" label-position="top">
                     <el-form-item :label="t('card.cards.single_stroke_Maximum_amount')" class="custom-form-item">
-                    <el-input v-model="card.quota.singleLimit" :placeholder="t('card.cards.Maximum_amount') + ': 00,000'">
+                    <el-input v-model="card.quota.maxOnPercent" :placeholder="t('card.cards.Maximum_amount') + ': 00,000'">
                         <template #append>USD</template>
                     </el-input>
                     </el-form-item>
@@ -258,21 +264,21 @@
                     <el-form-item class="custom-form-item" style="margin-bottom: 0;">
                         <div class="form-item-content">
                             <span class="left-text">{{t('card.cards.Trading_quota')}}</span>
-                            <span v-if="card.quota.limitType == 'limited'" class="right-text">{{ t('card.cards.Remaining_amount') }}: {{card.quota.transactionLimit}}</span>
+                            <span v-if="card.quota.transactionLimitType == 'limited'" class="right-text">{{ t('card.cards.Remaining_amount') }}: {{card.quota.availableTransactionLimit}}</span>
                         </div>
                     </el-form-item>
                     <el-form-item  class="custom-form-item">
                         <div style="display: flex; align-items: center;width:460px;">
-                            <el-select v-model="card.quota.limitType" v-value="card.quota.limitType" :placeholder="t('card.cards.Please_select')" class="custom-select1" style="width: 150px;">
+                            <el-select v-model="card.quota.transactionLimitType" v-value="card.quota.transactionLimitType" :placeholder="t('card.cards.Please_select')" class="custom-select1" style="width: 150px;">
                                 <el-option :label="t('card.cards.restrict')" value="limited"></el-option>
                                 <el-option :label="t('card.cards.not_restrict')" value="unlimited"></el-option>
                                 <el-option :label="t('card.cards.cover')" value="cover"></el-option>
                             </el-select>
-                            <el-select v-if="card.quota.limitType != 'unlimited'" v-model="card.quota.operationType" :placeholder="t('card.cards.Please_select')" class="custom-select" style="margin-left: 25px;width: 80px;">
+                            <el-select v-if="card.quota.transactionLimitType != 'unlimited'" v-model="card.quota.transaction_limit_change_type" :placeholder="t('card.cards.Please_select')" class="custom-select" style="margin-left: 25px;width: 80px;">
                                 <el-option :label="t('card.cards.augment')" value="increase"></el-option>
                                 <el-option :label="t('card.cards.decrease')" value="decrease"></el-option>
                             </el-select>
-                            <el-input v-if="card.quota.limitType != 'unlimited'" v-model="card.quota.amount" placeholder="0" class="custom-select2" style="width: 230px;" />
+                            <el-input v-if="card.quota.transactionLimitType != 'unlimited'" v-model="card.quota.transaction_limit" placeholder="0" class="custom-select2" style="width: 230px;" />
                         </div>
                     </el-form-item>
                 </el-form>
@@ -284,41 +290,48 @@
                 </div>
             </template>
         </el-dialog>
-        <el-dialog title="限额" style="width: 518px;padding: 22px 27px;" :z-index="1000" v-model="quotaDialog" @close="DialogCloseFn(2)" center >
+        <el-dialog title="限额" style="width: 518px;padding: 22px 27px;" :z-index="1000" v-model="quotaDialog" @close="closeQuotaDialog" center >
             <div class="dialog-body limitType">
                 <el-form :model="card.quota" label-width="160px" label-position="top">
                     <el-form-item label="单笔最大交易额度" class="custom-form-item">
-                        <el-input v-model="card.quota.singleLimit" placeholder="最大额度: 00,000">
+                        <el-input v-model="card.quota.maxOnPercent" placeholder="最大额度: 00,000">
                             <template #append>USD</template>
                         </el-input>
                     </el-form-item>
                     <el-form-item class="custom-form-item" style="margin-bottom: 0;">
                         <div class="form-item-content">
                             <span class="left-text">交易限额</span>
-                            <span style="padding: 0 5px;" v-if="card.quota.limitType != 'unlimited'" class="right-text">剩余额度: {{card.quota.transactionLimit}}</span>
-                            <span v-if="card.quota.limitType != 'unlimited'" class="right-text">总限额: {{card.quota.totalTransactionLimit}}</span>
+                            <span style="padding: 0 5px;" v-if="card.quota.transactionLimitType != 'unlimited'" class="right-text">剩余额度: {{card.quota.availableTransactionLimit}}</span>
+                            <span v-if="card.quota.transactionLimitType != 'unlimited'" class="right-text">总限额: {{card.quota.totalTransactionLimit}}</span>
                         </div>
                     </el-form-item>
                     <el-form-item  class="custom-form-item">
                         <div style="display: flex; align-items: center;width:460px;">
-                            <el-select v-model="card.quota.limitType" v-value="card.quota.limitType" placeholder="请选择" class="custom-select1" style="width: 150px;">
-                                <el-option label="限制" value="limited"></el-option>
-                                <el-option label="不限" value="unlimited"></el-option>
-                                <el-option label="覆盖" value="cover"></el-option>
+                            <el-select v-model="card.quota.transactionLimitType" v-value="card.quota.transactionLimitType" placeholder="请选择" class="custom-select1" style="width: 150px;">
+                                <el-option
+                                    v-for="item in transactionLimitType"
+                                    :key="item.value"
+                                    :label="item.label"
+                                    :value="item.value"
+                                />
                             </el-select>
-                            <el-select v-if="card.quota.limitType != 'unlimited'" v-model="card.quota.operationType" placeholder="请选择" class="custom-select" style="margin-left: 25px;width: 80px;">
-                                <el-option label="增加" value="increase"></el-option>
-                                <el-option label="减少" value="decrease"></el-option>
+                            <el-select v-if="card.quota.transactionLimitType != 'unlimited'" v-model="card.quota.transaction_limit_change_type" placeholder="请选择" class="custom-select" style="margin-left: 25px;width: 80px;">
+                                <el-option
+                                    v-for="item in transactionLimitChangeType"
+                                    :key="item.value"
+                                    :label="item.label"
+                                    :value="item.value"
+                                />
                             </el-select>
-                            <el-input v-if="card.quota.limitType != 'unlimited'" v-model="card.quota.amount" placeholder="0" class="custom-select2" style="width: 230px;" />
+                            <el-input v-if="card.quota.transactionLimitType != 'unlimited'" v-model="card.quota.transaction_limit" placeholder="0" class="custom-select2" style="width: 230px;" />
                         </div>
                     </el-form-item>
                 </el-form>
             </div>
             <template #footer>
                 <div class="footer-buttons">
-                    <el-button :disabled="card.isClickedShow2" type="success" @click="confirmFn(2)" style="padding: 19px;background-color: #ffb400;border:0;">确认</el-button>
-                    <el-button @click="DialogCloseFn" style="color: #80108d;font-weight: bold;padding: 19px;background-color: #f5f7fa;border:0;">取消</el-button>
+                    <el-button :disabled="card.isClickedShow2" type="success" @click="addQuotaFn" style="padding: 19px;background-color: #ffb400;border:0;">确认</el-button>
+                    <el-button @click="closeQuotaDialog" style="color: #80108d;font-weight: bold; padding: 19px; background-color: #f5f7fa;border:0;">取消</el-button>
                 </div>
             </template>
         </el-dialog>
@@ -361,7 +374,7 @@ const baTable = new baTableClass(
     {
         column: [
             { type: 'selection', align: 'center', operator: false },
-            { label: t('card.cards.cardInfo__nickname'), prop: 'nickname', align: 'center', operator: 'LIKE',render: 'customTemplate', operatorPlaceholder: t('Fuzzy query'),
+            { label: t('card.cards.cardInfo__nickname'), prop: 'cardInfo.nickname', align: 'center', operator: 'LIKE',render: 'customTemplate', operatorPlaceholder: t('Fuzzy query'),
                 customTemplate: (row: TableRow, field: TableColumn, value: any, column, index: number) => {
                     if(!value){
                         return '...';
@@ -372,7 +385,7 @@ const baTable = new baTableClass(
             },
             { label: t('card.cards.card_scheme'), prop: 'card_scheme', align: 'center', operator: false,slotName: 'card_scheme', render: 'slot' },
             { label: t('card.cards.mask_card_no'), prop: 'mask_card_no', align: 'center', operator: 'LIKE', operatorPlaceholder: t('Fuzzy query') },
-            { label: t('card.cards.card_status'), prop: 'card_status', align: 'center', operator: false ,render: 'customTemplate',
+            { label: t('card.cards.card_status'), prop: 'cardInfo.card_status', align: 'center', operator: false ,render: 'customTemplate',
                 customTemplate: (row: TableRow, field: TableColumn, value: any, column, index: number) => {
                     if(value == 'normal'){
                         return '<span style="background-color:#f0fff3;padding:4px 9px;font-weight: bold;color:#22c55e;border-radius:4px;">'+t('card.cards.dynamic')+'</span>';
@@ -438,14 +451,14 @@ const card = reactive({
     return_amount: 0,
     max_on_percent: 0,
     quota: {
-        singleLimit: '',
+        maxOnPercent: '',
         dailyLimit: '',
         monthlyLimit: '',
-        transactionLimit: '0',
+        availableTransactionLimit: '0',
         totalTransactionLimit: '0',
-        limitType: 'unlimited',
-        operationType: 'increase',
-        amount: '',
+        transactionLimitType: 'unlimited',
+        transaction_limit_change_type: 'increase',
+        transaction_limit: '',
     },
     error: [],
     is_d: true,
@@ -455,13 +468,22 @@ const selectType = ref<number>(0)
 const currentRow = ref(null)
 const quotaDialog = ref(false)
 
-const disposeFn = (type: number, row) => {
+const transactionLimitType = [
+    {label:'限制', value: 'limited'},
+    {label:'不限', value: 'unlimited'}
+]
+const transactionLimitChangeType = [
+    {label:'增加', value: 'increase'},
+    {label:'减少', value: 'decrease'}
+]
+
+const disposeFn = (type: number, row:any) => {
     selectType.value = type
     card.id = row.card_id
     switch (type) {
         case 1:
-            infoFn(row.card_id)
-            cardsTransactionsFn(row.card_id)
+            getCardIn(row.card_id)
+            // cardsTransactionsFn(row.card_id)
             card.show = true
             break
         case 2:
@@ -470,7 +492,7 @@ const disposeFn = (type: number, row) => {
             break
         case 3:
             card.show2 = true
-            infoFn(row.card_id)
+            getCardIn(row.card_id)
             break
         case 4:
             confirmFn(3)
@@ -498,14 +520,14 @@ const disposeFn = (type: number, row) => {
             }
             card.showLimit = true
             card.quota = {
-                singleLimit: '',
+                maxOnPercent: '',
                 dailyLimit: '',
                 monthlyLimit: '',
-                transactionLimit: '0',
+                availableTransactionLimit: '0',
                 totalTransactionLimit: '0',
-                limitType: 'unlimited',
-                operationType: 'increase',
-                amount: '',
+                transactionLimitType: 'unlimited',
+                transaction_limit_change_type: 'increase',
+                transaction_limit: '',
             }
             break
         case 10:
@@ -513,7 +535,7 @@ const disposeFn = (type: number, row) => {
             break
     }
 }
-const infoFn = async (id: number) => {
+const getCardIn = async (id: number) => {
     const res = await cardInfoApi({ id })
     const result = res.data.row
     card.info = {
@@ -529,16 +551,28 @@ const infoFn = async (id: number) => {
         cardBalance: result.cardBalance,
         info_amount: result.info_amount
     }
+    card.quota = {
+        maxOnPercent: result.maxOnPercent,
+        dailyLimit:result.max_on_daily,
+        monthlyLimit:result.max_on_monthly,
+        availableTransactionLimit:result.availableTransactionLimit,
+        totalTransactionLimit:result.totalTransactionLimit,
+        transactionLimitType:result.transactionLimitType,
+        transaction_limit_change_type:'increase',
+        transaction_limit:'',
+    }
+    console.log('card.quota', card.quota)
 }
 
 const cardsTransactionsFn = async (id: number) => {
     const res = await cardsTransactionsApi({ id })
     card.transactions = res.data.row
+    baTable.onTableHeaderAction('refresh', [])
 }
 const confirmFn = async (type: number) => {
     switch (type) {
         case 1:
-            await updateCardApi({ id: card.id, nickname: card.nickname })
+            await updateCardApi({ card_id: card.id, nickname: card.nickname })
             tips('昵称修改成功', 'success')
             baTable.onTableHeaderAction('refresh', [])
             card.show1 = false
@@ -550,13 +584,14 @@ const confirmFn = async (type: number) => {
                 ids: [card.id],
                 max_on_daily: card.quota.dailyLimit,
                 max_on_monthly: card.quota.monthlyLimit,
-                max_on_percent: card.quota.singleLimit,
-                available_transaction_limit: card.quota.transactionLimit,
-                transaction_limit_type: card.quota.limitType,
-                transaction_limit_change_type: card.quota.limitType !== 'unlimited' ? card.quota.operationType : '',
-                transaction_limit: card.quota.limitType !== 'unlimited' ? card.quota.amount : '',
+                max_on_percent: card.quota.maxOnPercent,
+                available_transaction_limit: card.quota.availableTransactionLimit,
+                transaction_limit_type: card.quota.transactionLimitType,
+                transaction_limit_change_type: card.quota.transactionLimitType !== 'unlimited' ? card.quota.transaction_limit_change_type : '',
+                transaction_limit: card.quota.transactionLimitType !== 'unlimited' ? card.quota.transaction_limit : '',
             }
             const res = await cardUpdate(postData)
+            baTable.onTableHeaderAction('refresh', [])
             if (Array.isArray(res.data.error) && res.data.error.length > 0) {
                 card.error = res.data.error
                 card.showError = true
@@ -571,16 +606,19 @@ const confirmFn = async (type: number) => {
         case 3:
             await cardFreezeApi({ id: card.id, status: 'freeze' })
             tips('冻结成功', 'success')
+            baTable.onTableHeaderAction('refresh', [])
             card.show1 = false
             break
         case 4:
             await cardFreezeApi({ id: card.id, status: 'unfreeze' })
             tips('解冻成功', 'success')
+            baTable.onTableHeaderAction('refresh', [])
             card.show1 = false
             break
         case 5:
             await cancelCardApi({ id: card.id })
             tips('销卡成功', 'success')
+            baTable.onTableHeaderAction('refresh', [])
             card.show1 = false
             break
         case 6:
@@ -647,11 +685,11 @@ const batchConfirmFn = async (type: number) => {
                 ids,
                 max_on_daily: card.quota.dailyLimit,
                 max_on_monthly: card.quota.monthlyLimit,
-                max_on_percent: card.quota.singleLimit,
-                available_transaction_limit: card.quota.transactionLimit,
-                transaction_limit_type: card.quota.limitType,
-                transaction_limit_change_type: card.quota.limitType !== 'unlimited' ? card.quota.operationType : '',
-                transaction_limit: card.quota.limitType !== 'unlimited' ? card.quota.amount : '',
+                max_on_percent: card.quota.maxOnPercent,
+                available_transaction_limit: card.quota.availableTransactionLimit,
+                transaction_limit_type: card.quota.transactionLimitType,
+                transaction_limit_change_type: card.quota.transactionLimitType !== 'unlimited' ? card.quota.transaction_limit_change_type : '',
+                transaction_limit: card.quota.transactionLimitType !== 'unlimited' ? card.quota.transaction_limit : '',
             }
             await cardUpdate(quotaPostData)
             card.is_d = true
@@ -712,8 +750,37 @@ const handleCancel = () => {
     console.log('Cancelled');
 };
 
-const openQuotaDialog = () => {
+const openQuotaDialog = (row:any) => {
+    card.id = row.card_id
     quotaDialog.value = true
+    getCardIn(row.card_id)
+}
+const closeQuotaDialog = () => {
+    quotaDialog.value = false
+}
+const addQuotaFn = async () => {
+    console.log('11112')
+    try {
+        card.isClickedShow2 = true
+        const postData = {
+            card_id: card.id,
+            max_on_percent: card.quota.maxOnPercent,
+            available_transaction_limit: card.quota.availableTransactionLimit,
+            transaction_limit_type: card.quota.transactionLimitType,
+            transaction_limit_change_type: card.quota.transactionLimitType !== 'unlimited' ? card.quota.transaction_limit_change_type : '',
+            transaction_limit: card.quota.transactionLimitType !== 'unlimited' ? card.quota.transaction_limit : '',
+        }
+        await updateCardApi(postData)
+        tips('保存成功', 'success')
+        baTable.onTableHeaderAction('refresh', [])
+    } catch (error){
+        console.log(error)
+    } finally {
+        quotaDialog.value = false
+        card.isClickedShow2 = false
+    }
+
+
 }
 
 onMounted(async () => {

@@ -61,11 +61,11 @@
                     </el-form-item>
                     <el-form-item label="是否限额" required class="custom-label-position" prop="amount">
                         <!-- <el-input v-model="openCard.amount" class="el-input" type="number" :min="1"></el-input> -->
-                        <el-select v-model="openCard.quota" placeholder="Select" class="el-input">
+                        <el-select v-model="openCard.transaction_limit_type" placeholder="Select" class="el-input">
                             <el-option v-for="item in quotaList" :key="item.value" :label="item.label" :value="item.value"/>
                         </el-select>
                     </el-form-item>
-                    <el-form-item :label="amount" v-if="openCard.quota === 'unlimited'" required class="custom-label-position" prop="amount">
+                    <el-form-item :label="amount" v-if="openCard.transaction_limit_type === 'limited'" required class="custom-label-position" prop="amount">
                         <el-input v-model="openCard.amount" class="el-input" type="number" :min="1"></el-input>
                     </el-form-item>
                 </div>
@@ -109,14 +109,14 @@ interface openCard {
   'quantity': number
   'amount': number
   'cardBin': string
-  quota: string
+  transaction_limit_type: string
 }
 
 const openCard:openCard = reactive({
     'quantity': 0,
     'amount': 1,
     'cardBin': '',
-    quota: 'unlimited'
+    transaction_limit_type: 'unlimited'
 })
 const quotaList = [
     {label: '不限', value: 'unlimited'},
@@ -150,41 +150,43 @@ const resetForm = (formEl: FormInstance) => {
     formEl.resetFields()
 }
 const batchConfirmFn = async (formEl: FormInstance | undefined) => {
-    if (!formEl) return
-    await formEl.validate(async (valid, fields) => {
+    if (!formEl) return;
+
+    try {
+        const valid = await formEl.validate();
+        if (!valid) {
+            console.log('error submit!', valid);
+            return;
+        }
+
         if (openCard.amount < 1) {
             ElMessage({
                 message: t('card.openCard.amount_must_be_greater_than_twenty_tips'),
                 type: 'warning',
-            })
-            return
+            });
+            return;
         }
-        if (valid) {
-            try {
-                loading.value = true
-                let postData = {
-                    'card_bin': openCard.cardBin,
-                    'arrival_amount': openCard.amount,
-                    'number': openCard.quantity,
-                }
-                console.log('postData', postData)
-                await openCardApi(postData)
-                tips(t('card.openCard.open_card_tips'), 'success')
-                resetForm(formEl)
-            } catch (error) {
-                console.error('error', error)
-                // ElMessage.error('开卡失败，请重试')
-                loading.value = false
-                resetForm(formEl)
-            } finally {
-                setTimeout(() => {
-                    loading.value = false
-                }, 3000)
-            }
-        } else {
-            console.log('error submit!', fields)
-        }
-    })
+
+        loading.value = true;
+
+        const postData = {
+            card_bin: openCard.cardBin,
+            number: openCard.quantity,
+            transaction_limit_type: openCard.transaction_limit_type,
+            ...(openCard.transaction_limit_type === 'limited' && { arrival_amount: openCard.amount }),
+        };
+
+        console.log('postData', postData);
+
+        await openCardApi(postData);
+        tips(t('card.openCard.open_card_tips'), 'success');
+        resetForm(formEl);
+    } catch (error) {
+        console.error('error', error);
+        // ElMessage.error('开卡失败，请重试');
+    } finally {
+        loading.value = false;
+    }
 }
 
 const getSelectBin = async() => {
