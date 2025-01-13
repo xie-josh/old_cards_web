@@ -11,6 +11,7 @@
             :quick-search-placeholder="t('Quick search placeholder', { fields: t('card.cards.id') + '/' + t('card.cards.id') })"
         >
             <template #default>
+                <!-- 批量搜索 -->
                 <el-button class="table-header-operate" type="primary" @click="disposeFn(10,[])">
                     <span class="table-header-operate-text">{{ t('card.cards.batch_search') }}</span>
                 </el-button>
@@ -19,6 +20,7 @@
         <!-- 表格 -->
         <!-- 要使用`el-table`组件原有的属性，直接加在Table标签上即可 -->
         <Table ref="tableRef">
+            <!-- 类型 -->
             <template #card_scheme>
                 <el-table-column :label="t('card.cards.card_scheme')" width="180" align="center">
                     <template #default="scope">
@@ -33,11 +35,18 @@
                             <el-button style="border: 0px; background-color: transparent;"> <Icon name="el-icon-MoreFilled" style="font-size: 14px;" color="#adadad" /></el-button>
                             <template #dropdown>
                                 <el-dropdown-menu>
-                                    <el-dropdown-item v-if="scope.row.cardInfo.card_status == 'normal' || scope.row.cardInfo.card_status == 'cancelled'" @click="openQuotaDialog(scope.row)"><Icon name="el-icon-PieChart" class="menu_icon"/>限额</el-dropdown-item>
+                                    <!-- 限额 -->
+                                    <el-dropdown-item v-if="scope.row.cardInfo.card_status == 'normal' || scope.row.cardInfo.card_status == 'cancelled'" @click="openQuotaDialog(scope.row)"><Icon name="el-icon-PieChart" class="menu_icon"/>
+                                        {{ t('card.cards.quota') }}
+                                    </el-dropdown-item>
                                     <!-- 冻结 -->
-                                    <el-dropdown-item v-if="scope.row.cardInfo.card_status == 'normal'" @click="disposeFn(4,scope.row)"><Icon name="el-icon-Lock" class="menu_icon" />{{t('card.cards.Frozen')}}</el-dropdown-item>
+                                    <el-dropdown-item v-if="scope.row.cardInfo.card_status == 'normal'" @click="disposeFn(4,scope.row)"><Icon name="el-icon-Lock" class="menu_icon" />
+                                        {{ t('card.cards.Frozen') }}
+                                    </el-dropdown-item>
                                     <!-- 解冻 -->
-                                    <el-dropdown-item v-if="scope.row.cardInfo.card_status == 'frozen'" @click="disposeFn(5,scope.row)"><Icon name="el-icon-Unlock" class="menu_icon" />{{t('card.cards.thaw')}}</el-dropdown-item>
+                                    <el-dropdown-item v-if="scope.row.cardInfo.card_status == 'frozen'" @click="disposeFn(5,scope.row)"><Icon name="el-icon-Unlock" class="menu_icon" />
+                                        {{ t('card.cards.thaw') }}
+                                    </el-dropdown-item>
                                     <!-- 销卡 -->
                                     <el-popconfirm
                                         width="220"
@@ -57,16 +66,21 @@
                                 </el-dropdown-menu>
                             </template>
                         </el-dropdown>
-                        <!-- <span v-else style="font-size: 18px;font-weight: bolder; color: #B7B7B7;padding: 0 15px;">...</span> -->
-                        <el-button v-if="scope.row.cardInfo.card_status !== 'cancelled' && scope.row.cardInfo.card_status !== 'canceling'"  type='primary' text='primary' @click="disposeFn(1,scope.row)">{{t('card.cards.details')}}</el-button>
+                        <!-- 详情 -->
+                        <el-button v-if="scope.row.cardInfo.card_status !== 'cancelled' && scope.row.cardInfo.card_status !== 'canceling'"  type='primary' text='primary' @click="disposeFn(1,scope.row)">
+                            {{t('card.cards.details')}}
+                        </el-button>
                         <!-- 修改昵称 -->
-                        <el-button v-if="scope.row.cardInfo.card_status !== 'cancelled' && scope.row.cardInfo.card_status !== 'canceling'"  type='primary' text='primary' @click="disposeFn(2,scope.row)">{{ t('card.cards.note')}}</el-button>
+                        <el-button v-if="scope.row.cardInfo.card_status !== 'cancelled' && scope.row.cardInfo.card_status !== 'canceling'"  type='primary' text='primary' @click="disposeFn(2,scope.row)">
+                            {{ t('card.cards.note')}}
+                        </el-button>
                     </template>
                 </el-table-column>
             </template>
         </Table>
         <!-- 表单 -->
         <PopupForm />
+        <!-- 详情 -->
         <div class="addPurchasingManagement-dialog">
             <el-dialog :title="t('card.cards.details')" :z-index="1000" v-model="card.show" @close="DialogCloseFn(1)" center destroy-on-close draggable>
                 <div class="dialog-body">
@@ -74,7 +88,8 @@
                     <el-form :model="card.info" label-position="top">
                         <el-row :gutter="20">
                             <el-col :span="8">
-                                <el-form-item :label="t('card.cards.Card_number')" style="width: 200px;">
+                                <!-- 卡号 -->
+                                <el-form-item :label="t('card.cards.Card_number')" class="width200">
                                     <div style="display: flex; align-items: center;">
                                         <el-input v-model="card.info.cardNumber" input-style="text-align: center;" disabled />
                                         <Icon name="el-icon-CopyDocument" style="font-size: 16px; margin-left: 4px;cursor: pointer;" color="#000" @click="copyText(card.info.cardNumber)" />
@@ -82,7 +97,8 @@
                                 </el-form-item>
                             </el-col>
                             <el-col :span="8">
-                                <el-form-item label="Expires" style="width: 200px;">
+                                <!-- Expires -->
+                                <el-form-item label="Expires" class="width200">
                                     <div style="display: flex; align-items: center;">
                                         <el-input v-model="card.info.expires" input-style="text-align: center;" disabled />
                                         <Icon name="el-icon-CopyDocument" style="font-size: 16px; margin-left: 4px;cursor: pointer;" color="#000" @click="copyText(card.info.expires)" />
@@ -90,7 +106,8 @@
                                 </el-form-item>
                             </el-col>
                             <el-col :span="8">
-                                <el-form-item :label="t('card.cards.CVV_code')" style="width: 200px;">
+                                <!-- CVV码 -->
+                                <el-form-item :label="t('card.cards.CVV_code')" class="width200">
                                     <div style="display: flex; align-items: center;">
                                         <el-input v-model="card.info.cvv" input-style="text-align: center;" disabled />
                                         <Icon name="el-icon-CopyDocument" style="font-size: 16px; margin-left: 4px;cursor: pointer;" color="#000" @click="copyText(card.info.cvv)" />
@@ -103,86 +120,116 @@
             </el-dialog>
         </div>
         <div class="addPurchasingManagement-dialog">
-            <el-dialog :title="t('card.cards.note')" style="width: 600px;" :z-index="1000" v-model="card.show1" @close="DialogCloseFn(2)" center destroy-on-close draggable>
+            <!-- 修改昵称 -->
+            <el-dialog :title="t('card.cards.note')" class="width600" :z-index="1000" v-model="card.show1" @close="DialogCloseFn(2)" center destroy-on-close draggable>
                 <div class="dialog-body">
                     <div class="tableList">
-                        <el-input v-model="card.nickname" style="width: 240px" placeholder="Please nickname" />
+                        <el-input v-model="card.nickname" class="width240" placeholder="Please nickname" />
                     </div>
                 </div>
                 <template #footer>
                     <div>
+                        <!-- 确认 -->
                         <el-button type="success" @click="confirmFn(1)" >{{ t('card.cards.verify') }} </el-button>
-                        <el-button @click="DialogCloseFn" style="right: 20px;position: absolute;">{{ t('card.cards.Cancel') }}</el-button>
+                        <!-- 取消 -->
+                        <el-button @click="DialogCloseFn" class="cancel">{{ t('card.cards.Cancel') }}</el-button>
                     </div>
                 </template>
             </el-dialog>
         </div>
         <div class="addPurchasingManagement-dialog">
-            <el-dialog :title="t('card.cards.Deduct_money')" style="width: 600px;" :z-index="1000" v-model="card.show11" @close="DialogCloseFn(11)" center destroy-on-close draggable>
+            <!-- 扣款 -->
+            <el-dialog :title="t('card.cards.Deduct_money')" class="width600" :z-index="1000" v-model="card.show11" @close="DialogCloseFn(11)" center destroy-on-close draggable>
                 <div class="dialog-body">
                     <div class="tableList">
-                        <el-input-number v-model="card.return_amount" style="width: 240px" min="0" placeholder="Please return_amount" />
+                        <el-input-number v-model="card.return_amount" class="width240" min="0" placeholder="Please return_amount" />
                     </div>
                 </div>
                 <template #footer>
                     <div>
+                        <!-- 确认 -->
                         <el-button type="success" @click="confirmFn(11)" >{{ t('card.cards.verify') }}</el-button>
-                        <el-button @click="DialogCloseFn" style="right: 20px;position: absolute;">{{ t('card.cards.Cancel') }}</el-button>
+                        <!-- 取消 -->
+                        <el-button @click="DialogCloseFn" class="cancel">{{ t('card.cards.Cancel') }}</el-button>
                     </div>
                 </template>
             </el-dialog>
         </div>
         <div class="addPurchasingManagement-dialog">
-            <el-dialog :title="t('card.cards.edit_quota')" style="width: 600px;" :z-index="1000" v-model="card.show12" @close="DialogCloseFn(12)" center destroy-on-close draggable>
+            <!-- 修改限额 -->
+            <el-dialog :title="t('card.cards.edit_quota')" class="width600" :z-index="1000" v-model="card.show12" @close="DialogCloseFn(12)" center destroy-on-close draggable>
                 <div class="dialog-body">
                     <div class="tableList">
-                        <el-input-number v-model="card.max_on_percent" style="width: 240px" min="0"  placeholder="Please max_on_percent" />
+                        <el-input-number v-model="card.max_on_percent" class="width240" min="0"  placeholder="Please max_on_percent" />
                     </div>
                 </div>
                 <template #footer>
                     <div>
+                        <!-- 确认 -->
                         <el-button type="success" @click="confirmFn(12)" >{{ t('card.cards.verify') }}</el-button>
-                        <el-button @click="DialogCloseFn" style="right: 20px;position: absolute;">{{ t('card.cards.Cancel') }}</el-button>
+                        <!-- 取消 -->
+                        <el-button @click="DialogCloseFn" class="cancel">{{ t('card.cards.Cancel') }}</el-button>
                     </div>
                 </template>
             </el-dialog>
         </div>
         <div class="addPurchasingManagement-dialog">
-            <el-dialog :title="t('card.cards.quota')" style="width: 518px;padding: 22px 27px;" :z-index="1000" v-model="card.show2" @close="DialogCloseFn(2)" center >
+            <!-- 限额 -->
+            <el-dialog :title="t('card.cards.quota')" class="dialog-width" :z-index="1000" v-model="card.show2" @close="DialogCloseFn(2)" center >
                 <div class="dialog-body limitType">
                     <el-form :model="card.quota" label-width="160px" label-position="top">
+                        <!-- 单笔最大交易额度 -->
                         <el-form-item :label="t('card.cards.single_stroke_Maximum_amount')" class="custom-form-item">
+                            <!-- 最大额度 -->
                             <el-input v-model="card.quota.maxOnPercent" :placeholder="t('card.cards.Maximum_amount') + ': 00,000'">
-                                <template #append style="background-color: #dfdeea;" >USD</template>
+                                <template #append>USD</template>
                             </el-input>
                         </el-form-item>
+                        <!-- 日交易限额 -->
                         <el-form-item :label="t('card.cards.Day_trading_quota')" class="custom-form-item">
+                            <!-- 最大额度 -->
                             <el-input v-model="card.quota.dailyLimit" :placeholder="t('card.cards.Maximum_amount') + ': 00,000'">
                                 <template #append>USD</template>
                             </el-input>
                         </el-form-item>
-
+                        <!-- 月交易限额 -->
                         <el-form-item :label="t('card.cards.Monthly_Transaction_quota')" class="custom-form-item">
+                            <!-- 最大额度 -->
                             <el-input v-model="card.quota.monthlyLimit" :placeholder="t('card.cards.Maximum_amount') + ': 00,000'">
                                 <template #append>USD</template>
                             </el-input>
                         </el-form-item>
                         <el-form-item class="custom-form-item" style="margin-bottom: 0;">
                             <div class="form-item-content">
-                                <span class="left-text">{{ t('card.cards.Trading_quota') }}</span>
-                                <span style="padding: 0 5px;" v-if="card.quota.transactionLimitType != 'unlimited'" class="right-text">{{ t('card.cards.Remaining_amount') }}: {{card.quota.availableTransactionLimit}}</span>
-                                <span v-if="card.quota.transactionLimitType != 'unlimited'" class="right-text">{{ t('card.cards.total_quota') }}: {{card.quota.totalTransactionLimit}}</span>
+                                <!-- 交易限额 -->
+                                <span class="left-text">
+                                    {{ t('card.cards.Trading_quota') }}
+                                </span>
+                                <!-- 剩余额度 -->
+                                <span style="padding: 0 5px;" v-if="card.quota.transactionLimitType != 'unlimited'" class="right-text">
+                                    {{ t('card.cards.Remaining_amount') }}: {{ card.quota.availableTransactionLimit }}
+                                </span>
+                                <!-- 总限额 -->
+                                <span v-if="card.quota.transactionLimitType != 'unlimited'" class="right-text">
+                                    {{ t('card.cards.total_quota') }}: {{ card.quota.totalTransactionLimit }}
+                                </span>
                             </div>
                         </el-form-item>
                         <el-form-item  class="custom-form-item">
                             <div style="display: flex; align-items: center;width:460px;">
+                                <!-- 请选择 -->
                                 <el-select v-model="card.quota.transactionLimitType" v-value="card.quota.transactionLimitType" :placeholder="t('card.cards.Please_select')" class="custom-select1" style="width: 150px;">
+                                    <!-- 限制 -->
                                     <el-option :label="t('card.cards.restrict')" value="limited"></el-option>
+                                    <!-- 不限 -->
                                     <el-option :label="t('card.cards.not_restrict')" value="unlimited"></el-option>
+                                    <!-- 覆盖 -->
                                     <el-option :label="t('card.cards.cover')" value="cover"></el-option>
                                 </el-select>
                                 <el-select v-if="card.quota.transactionLimitType != 'unlimited'" v-model="card.quota.transaction_limit_change_type" :placeholder="t('card.cards.Please_select')" class="custom-select" style="margin-left: 25px;width: 80px;">
+                                    <!-- 增加 -->
                                     <el-option :label="t('card.cards.augment')" value="increase"></el-option>
+                                    <!-- 限制 -->
                                     <el-option :label="t('card.cards.restrict')" value="decrease"></el-option>
                                 </el-select>
                                 <el-input v-if="card.quota.transactionLimitType != 'unlimited'" v-model="card.quota.transaction_limit" placeholder="0" class="custom-select2" style="width: 230px;" />
@@ -192,19 +239,24 @@
                 </div>
                 <template #footer>
                     <div class="footer-buttons">
+                        <!-- 确认 -->
                         <el-button :disabled="card.isClickedShow2" type="success" @click="confirmFn(2)" style="padding: 19px;background-color: #ffb400;border:0;">{{ t('card.cards.verify') }}</el-button>
+                        <!-- 取消 -->
                         <el-button @click="DialogCloseFn" style="color: #80108d;font-weight: bold;padding: 19px;background-color: #f5f7fa;border:0;">{{ t('card.cards.Cancel') }}</el-button>
                     </div>
                 </template>
             </el-dialog>
         </div>
         <div class="addPurchasingManagement-dialog">
-            <el-dialog :title="t('card.cards.batch_search')" style="width: 600px;" :z-index="1000"  v-model="card.show10" @close="DialogCloseFn(10)" center>
+            <!-- 批量搜索 -->
+            <el-dialog :title="t('card.cards.batch_search')" class="width600" :z-index="1000"  v-model="card.show10" @close="DialogCloseFn(10)" center>
                 <div class="dialog-body">
                     <el-tabs v-model="activeName"  class="demo-tabs">
+                        <!-- 卡号 -->
                         <el-tab-pane :label="t('card.cards.Card_number')" name="cards">
                             <el-input  v-model="card.cards_ids" style="width: 560px" :autosize="{ minRows: 20, maxRows: 25 }" type="textarea" placeholder="Please input"/>
                         </el-tab-pane>
+                        <!-- 昵称 -->
                         <el-tab-pane :label="t('card.cards.nickname')" name="nickname">
                             <el-input v-model="card.nickname_ids" style="width: 560px" :autosize="{ minRows: 20, maxRows: 25 }" type="textarea" placeholder="Please input"/>
                         </el-tab-pane>
@@ -212,25 +264,31 @@
                 </div>
                 <template #footer>
                     <div>
+                        <!-- 搜索 -->
                         <el-button type="success" @click="confirmFn(10)" >{{ t('card.cards.search') }}</el-button>
                     </div>
                 </template>
             </el-dialog>
         </div>
+        <!-- 详情 -->
         <el-dialog :title="t('card.cards.details')" :z-index="1000" v-model="card.showError" center destroy-on-close draggable>
             <div class="dialog-body">
                 <el-table :data="card.error" style="width: 100%;max-height: 500px;overflow-y: auto;">
+                    <!-- 卡号 -->
                     <el-table-column prop="card_no" :label="t('card.cards.Card_number')" />
+                    <!-- 错误详情 -->
                     <el-table-column prop="msg" :label="t('card.cards.Error_details')" />
                 </el-table>
             </div>
             <template #footer>
                 <div class="dialog-footer">
+                    <!-- 取消 -->
                     <el-button @click="DialogCloseFn">{{ t('card.cards.Cancel') }}</el-button>
                 </div>
             </template>
         </el-dialog>
-        <el-dialog :title="t('card.cards.top_up')" style="width: 600px;" :z-index="1000" v-model="card.show7" @close="DialogCloseFn(2)" center destroy-on-close draggable>
+        <!-- 充值 -->
+        <el-dialog :title="t('card.cards.top_up')" class="width600" :z-index="1000" v-model="card.show7" @close="DialogCloseFn(2)" center destroy-on-close draggable>
             <div class="dialog-body">
                 <div class="tableList">
                     <el-input-number v-model="card.arrivalAmount" min="1"></el-input-number>
@@ -238,44 +296,62 @@
             </div>
             <template #footer>
                 <div>
+                    <!-- 确认 -->
                     <el-button type="success" @click="confirmFn(6)" >{{ t('card.cards.verify') }}</el-button>
-                    <el-button @click="DialogCloseFn" style="right: 20px;position: absolute;">{{ t('card.cards.Cancel') }}</el-button>
+                    <!-- 取消 -->
+                    <el-button @click="DialogCloseFn" class="cancel">{{ t('card.cards.Cancel') }}</el-button>
                 </div>
             </template>
         </el-dialog>
-        <el-dialog :title="t('card.cards.batch_quota')" style="width: 518px;padding: 22px 27px;" :z-index="1000" v-model="card.showLimit" center >
+        <!-- 批量限额 -->
+        <el-dialog :title="t('card.cards.batch_quota')" class="dialog-width" :z-index="1000" v-model="card.showLimit" center >
             <div class="dialog-body limitType">
                 <el-form :model="card.quota" label-width="160px" label-position="top">
+                    <!-- 单笔最大交易额度 -->
                     <el-form-item :label="t('card.cards.single_stroke_Maximum_amount')" class="custom-form-item">
-                    <el-input v-model="card.quota.maxOnPercent" :placeholder="t('card.cards.Maximum_amount') + ': 00,000'">
-                        <template #append>USD</template>
-                    </el-input>
+                        <!-- 最大额度 -->
+                        <el-input v-model="card.quota.maxOnPercent" :placeholder="t('card.cards.Maximum_amount') + ': 00,000'">
+                            <template #append>USD</template>
+                        </el-input>
                     </el-form-item>
+                    <!-- 日交易限额 -->
                     <el-form-item :label="t('card.cards.Day_trading_quota')" class="custom-form-item">
-                    <el-input v-model="card.quota.dailyLimit" :placeholder="t('card.cards.Maximum_amount') + ': 00,000'">
-                        <template #append>USD</template>
-                    </el-input>
+                        <el-input v-model="card.quota.dailyLimit" :placeholder="t('card.cards.Maximum_amount') + ': 00,000'">
+                            <template #append>USD</template>
+                        </el-input>
                     </el-form-item>
+                    <!-- 月交易限额 -->
                     <el-form-item :label="t('card.cards.Monthly_Transaction_quota')" class="custom-form-item">
-                    <el-input v-model="card.quota.monthlyLimit" :placeholder="t('card.cards.Maximum_amount') + ': 00,000'">
-                        <template #append>USD</template>
-                    </el-input>
+                        <el-input v-model="card.quota.monthlyLimit" :placeholder="t('card.cards.Maximum_amount') + ': 00,000'">
+                            <template #append>USD</template>
+                        </el-input>
                     </el-form-item>
+                    <!-- 交易限额 -->
                     <el-form-item class="custom-form-item" style="margin-bottom: 0;">
                         <div class="form-item-content">
+                            <!-- 交易限额 -->
                             <span class="left-text">{{t('card.cards.Trading_quota')}}</span>
-                            <span v-if="card.quota.transactionLimitType == 'limited'" class="right-text">{{ t('card.cards.Remaining_amount') }}: {{card.quota.availableTransactionLimit}}</span>
+                            <!-- 剩余额度 -->
+                            <span v-if="card.quota.transactionLimitType == 'limited'" class="right-text">
+                                {{ t('card.cards.Remaining_amount') }}: {{ card.quota.availableTransactionLimit }}
+                            </span>
                         </div>
                     </el-form-item>
                     <el-form-item  class="custom-form-item">
                         <div style="display: flex; align-items: center;width:460px;">
+                            <!-- 请选择 -->
                             <el-select v-model="card.quota.transactionLimitType" v-value="card.quota.transactionLimitType" :placeholder="t('card.cards.Please_select')" class="custom-select1" style="width: 150px;">
+                                <!-- 限制 -->
                                 <el-option :label="t('card.cards.restrict')" value="limited"></el-option>
+                                <!-- 不限 -->
                                 <el-option :label="t('card.cards.not_restrict')" value="unlimited"></el-option>
+                                <!-- 覆盖 -->
                                 <el-option :label="t('card.cards.cover')" value="cover"></el-option>
                             </el-select>
                             <el-select v-if="card.quota.transactionLimitType != 'unlimited'" v-model="card.quota.transaction_limit_change_type" :placeholder="t('card.cards.Please_select')" class="custom-select" style="margin-left: 25px;width: 80px;">
+                                <!-- 增加 -->
                                 <el-option :label="t('card.cards.augment')" value="increase"></el-option>
+                                <!-- 减少 -->
                                 <el-option :label="t('card.cards.decrease')" value="decrease"></el-option>
                             </el-select>
                             <el-input v-if="card.quota.transactionLimitType != 'unlimited'" v-model="card.quota.transaction_limit" placeholder="0" class="custom-select2" style="width: 230px;" />
@@ -285,12 +361,14 @@
             </div>
             <template #footer>
                 <div class="footer-buttons">
-                    <el-button :disabled="card.isClickedShowLimit"  type="success" @click="batchConfirmFn(3)" style="padding: 19px;background-color: #ffb400;border:0;">{{ t('card.cards.verify') }}</el-button>
+                    <!-- 确认 -->
+                    <el-button :disabled="card.isClickedShowLimit" type="success" @click="batchConfirmFn(3)" style="padding: 19px;background-color: #ffb400;border:0;">{{ t('card.cards.verify') }}</el-button>
+                    <!-- 取消 -->
                     <el-button @click="DialogCloseFn" style="color: #80108d;font-weight: bold;padding: 19px;background-color: #f5f7fa;border:0;">{{ t('card.cards.Cancel') }}</el-button>
                 </div>
             </template>
         </el-dialog>
-        <el-dialog title="限额" style="width: 518px;padding: 22px 27px;" :z-index="1000" v-model="quotaDialog" @close="closeQuotaDialog" center >
+        <el-dialog title="限额" class="dialog-width" :z-index="1000" v-model="quotaDialog" @close="closeQuotaDialog" center >
             <div class="dialog-body limitType">
                 <el-form :model="card.quota" label-width="160px" label-position="top">
                     <el-form-item label="单笔最大交易额度" class="custom-form-item">
@@ -301,15 +379,15 @@
                     <el-form-item class="custom-form-item" style="margin-bottom: 0;">
                         <div class="form-item-content">
                             <span class="left-text">交易限额</span>
-                            <span style="padding: 0 5px;" v-if="card.quota.transactionLimitType != 'unlimited'" class="right-text">剩余额度: {{card.quota.availableTransactionLimit}}</span>
-                            <span v-if="card.quota.transactionLimitType != 'unlimited'" class="right-text">总限额: {{card.quota.totalTransactionLimit}}</span>
+                            <span style="padding: 0 5px;" v-if="card.quota.transactionLimitType != 'unlimited'" class="right-text">剩余额度: {{ card.quota.availableTransactionLimit }}</span>
+                            <span v-if="card.quota.transactionLimitType != 'unlimited'" class="right-text">总限额: {{ card.quota.totalTransactionLimit }}</span>
                         </div>
                     </el-form-item>
                     <el-form-item  class="custom-form-item">
                         <div style="display: flex; align-items: center;width:460px;">
                             <el-select v-model="card.quota.transactionLimitType" v-value="card.quota.transactionLimitType" placeholder="请选择" class="custom-select1" style="width: 150px;">
                                 <el-option
-                                    v-for="item in transactionLimitType"
+                                    v-for="item in transactionLimitTypeList"
                                     :key="item.value"
                                     :label="item.label"
                                     :value="item.value"
@@ -317,7 +395,7 @@
                             </el-select>
                             <el-select v-if="card.quota.transactionLimitType != 'unlimited'" v-model="card.quota.transaction_limit_change_type" placeholder="请选择" class="custom-select" style="margin-left: 25px;width: 80px;">
                                 <el-option
-                                    v-for="item in transactionLimitChangeType"
+                                    v-for="item in transactionLimitChangeTypeList"
                                     :key="item.value"
                                     :label="item.label"
                                     :value="item.value"
@@ -468,11 +546,11 @@ const selectType = ref<number>(0)
 const currentRow = ref(null)
 const quotaDialog = ref(false)
 
-const transactionLimitType = [
+const transactionLimitTypeList = [
     {label:'限制', value: 'limited'},
     {label:'不限', value: 'unlimited'}
 ]
-const transactionLimitChangeType = [
+const transactionLimitChangeTypeList = [
     {label:'增加', value: 'increase'},
     {label:'减少', value: 'decrease'}
 ]
@@ -553,13 +631,13 @@ const getCardIn = async (id: number) => {
     }
     card.quota = {
         maxOnPercent: result.maxOnPercent,
-        dailyLimit:result.max_on_daily,
-        monthlyLimit:result.max_on_monthly,
-        availableTransactionLimit:result.availableTransactionLimit,
-        totalTransactionLimit:result.totalTransactionLimit,
-        transactionLimitType:result.transactionLimitType,
-        transaction_limit_change_type:'increase',
-        transaction_limit:'',
+        dailyLimit: result.max_on_daily,
+        monthlyLimit: result.max_on_monthly,
+        availableTransactionLimit: result.availableTransactionLimit,
+        totalTransactionLimit: result.totalTransactionLimit,
+        transactionLimitType: result.transactionLimitType,
+        transaction_limit_change_type: 'increase',
+        transaction_limit: '',
     }
     console.log('card.quota', card.quota)
 }
@@ -759,7 +837,6 @@ const closeQuotaDialog = () => {
     quotaDialog.value = false
 }
 const addQuotaFn = async () => {
-    console.log('11112')
     try {
         card.isClickedShow2 = true
         const postData = {
@@ -969,5 +1046,22 @@ provide('baTable', baTable)
 .statistics-container {
     display: flex;
     padding: 20px 20px 0;
+}
+.dialog-width {
+    width: 518px;
+    padding: 22px 27px;
+}
+.width200 {
+    width: 200px;
+}
+.width240 {
+    width: 240px
+}
+.width600 {
+    width: 600px;
+}
+.cancel {
+    right: 20px;
+    position: absolute;
 }
 </style>
