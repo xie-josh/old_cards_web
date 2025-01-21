@@ -387,3 +387,11 @@ export function adminCardCardsTransactionsExcel(data: anyObj) {
         timeout:6000000
     })
 }
+// 批量销户
+export function postAdminCardCardsCancelCardIds(data: anyObj) {
+    return createAxios({
+        url: `/admin/card.Cards/cancelCardIds`,
+        method: 'post',
+        data: data
+    })
+}

@@ -68,5 +68,8 @@ export default {
     'refund_reversal': '退款撤销',
     'fund_in': '汇入',
     'export': '导出',
-    'export_tips': '自选导出 或 导出全部'
+    'export_tips': '自选导出 或 导出全部',
+    batch_del: '批量销户',
+    account_cancellation: '销户',
+    account_cancellation_tips: '是否确认销户？'
 }

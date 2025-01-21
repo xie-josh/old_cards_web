@@ -68,5 +68,8 @@ export default {
     'refund_reversal': 'refund reversal',
     'fund_in': 'fund in',
     'export': 'Export',
-    'export_tips': 'Optional export or export all'
+    'export_tips': 'Optional export or export all',
+    batch_del: 'batch account cancellation',
+    account_cancellation: 'account cancellation',
+    account_cancellation_tips: 'Do you confirm account cancellation?'
 }

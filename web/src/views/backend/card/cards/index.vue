@@ -15,6 +15,9 @@
                 <el-button class="table-header-operate" type="primary" @click="disposeFn(10,[])">
                     <span class="table-header-operate-text">{{ t('card.cards.batch_search') }}</span>
                 </el-button>
+                <el-button class="table-header-operate" type="danger" @click="batchAccountCancellation" :disabled="baTable.table.selection!.length > 0 ? false:true">
+                <span class="table-header-operate-text">{{ t('card.cards.batch_del') }}</span>
+            </el-button>
             </template>
         </TableHeader>
         <!-- 表格 -->
@@ -414,6 +417,22 @@
             </template>
         </el-dialog>
     </div>
+    <el-dialog
+    v-model="centerDialogVisible"
+    :title="t('card.cards.batch_del')"
+    width="500"
+    align-center
+  >
+    <span>{{ t('card.cards.account_cancellation_tips') }}</span>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="cancel">{{ t('card.cards.Cancel') }}</el-button>
+        <el-button type="primary" @click="verify">
+            {{ t('card.cards.verify') }}
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
   </PageContainer>
 </template>
 
@@ -436,7 +455,8 @@ import {
     postAdminCardCardsRechargeReturn,
     postAdminCardCardsUpdateCard,
     cardUpdate,
-    cardFreeze
+    cardFreeze,
+    postAdminCardCardsCancelCardIds
 } from '/@/api/backend/index.ts';
 import { tips } from '/@/utils/common';
 import PageContainer from '/@/components/PageContainer/index.vue'
@@ -856,8 +876,30 @@ const addQuotaFn = async () => {
         quotaDialog.value = false
         card.isClickedShow2 = false
     }
-
-
+}
+const centerDialogVisible = ref(false)
+const cardIds = ref<any[]>([])
+const batchAccountCancellation = () => {
+    centerDialogVisible.value = true
+    const selectedRows = baTable.table.selection || []
+    cardIds.value = selectedRows.map((row:any)=>row.card_id)
+}
+const verify = async () => {
+    try{
+        const params = {
+            card_ids: cardIds.value
+        }
+        await postAdminCardCardsCancelCardIds(params)
+        tips('销卡成功', 'success')
+    } catch (error) {
+        console.log(error)
+    } finally {
+        centerDialogVisible.value = false
+        baTable.onTableHeaderAction('quick-search',[])
+    }
+}
+const cancel = () => {
+    centerDialogVisible.value = false
 }
 
 onMounted(async () => {
