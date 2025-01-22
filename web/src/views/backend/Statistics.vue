@@ -377,17 +377,17 @@ provide('baTable', baTable)
             overflow-x: hidden;
         }
         /* 隐藏滚动条 */
-        // .announcement::-webkit-scrollbar {
-        //     width: 0.5em;
-        // }
+         .announcement::-webkit-scrollbar {
+             width: 0.5em;
+         }
 
-        // .announcement::-webkit-scrollbar-track {
-        //     background: transparent;
-        // }
+         .announcement::-webkit-scrollbar-track {
+             background: transparent;
+         }
 
-        // .announcement::-webkit-scrollbar-thumb {
-        //     background-color: transparent;
-        // }
+         .announcement::-webkit-scrollbar-thumb {
+             background-color: transparent;
+        }
 
         .announcement-title {
             white-space: nowrap; /* 防止文本换行 */
@@ -443,17 +443,17 @@ provide('baTable', baTable)
 }
 
 /* 隐藏滚动条 */
-// .announcement-details::-webkit-scrollbar {
-//     width: 0.5em;
-// }
+ .announcement-details::-webkit-scrollbar {
+     width: 0.5em;
+ }
 
-// .announcement-details::-webkit-scrollbar-track {
-//     background: transparent;
-// }
+ .announcement-details::-webkit-scrollbar-track {
+     background: transparent;
+ }
 
-// .announcement-details::-webkit-scrollbar-thumb {
-//     background-color: transparent;
-// }
+ .announcement-details::-webkit-scrollbar-thumb {
+     background-color: transparent;
+}
 ::v-deep .el-dialog__title {
     font-weight: bold;
 }
